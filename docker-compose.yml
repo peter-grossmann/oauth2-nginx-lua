@@ -1,0 +1,41 @@
+version: "3.7"
+services:
+  reverse-proxy:
+    build:
+      context: ./nginx-lua
+      dockerfile: Dockerfile
+    networks:
+      - nginx-proxy-net
+    expose:
+      - "7700"
+    ports:
+      - "7700:7700"
+    environment:
+      - TARGET=http://httpd:80
+      - DISCOVERY_URL=http://id-server:5000/.well-known/openid-configuration
+  httpd:
+    build:
+      context: ./httpd
+      dockerfile: Dockerfile
+    networks:
+      nginx-proxy-net:
+        aliases:
+          - httpd
+    expose:
+      - "80"
+  id-server:
+    build:
+      context: ./id-server
+      dockerfile: Dockerfile
+    networks:
+      nginx-proxy-net:
+        aliases:
+          - id-server
+    expose:
+      - "5000"
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_URLS=http://*:5000
+networks:
+  nginx-proxy-net: {}
